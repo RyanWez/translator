@@ -2,12 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { GoogleGenAI } from '@google/genai';
 import { Copy, Check, RefreshCw, ChevronDown, ArrowUp, Moon, Sun, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-
-// Initialize Gemini API
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+import { translateText } from './actions';
 
 type Message = {
   id: string;
@@ -110,18 +107,11 @@ export default function TranslatorApp() {
       const minDelay = new Promise(resolve => setTimeout(resolve, 800));
       
       const [response] = await Promise.all([
-        ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
-          contents: userText,
-          config: {
-            systemInstruction: `You are a direct translator. Translate the user's input into ${selectedLangName}. Provide ONLY the translation. Do not include any quotes, explanations, original text, or markdown formatting. Just the translated text.`,
-            temperature: 0.3,
-          },
-        }),
+        translateText(userText, selectedLangName),
         minDelay
       ]);
 
-      const translatedText = response.text || 'Translation failed.';
+      const translatedText = response.success ? response.text! : response.error!;
 
       setMessages((prev) =>
         prev.map((msg) =>

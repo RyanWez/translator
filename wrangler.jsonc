@@ -21,5 +21,12 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  "routes": [
+    {
+      "pattern": "translator.ryanwez.com",
+      "zone_name": "ryanwez.com",
+      "custom_domain": true
+    }
+  ]
 }
