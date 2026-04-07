@@ -33,6 +33,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+try {
+  import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+} catch (e) {
+  // Silence module not found in some environments
+}
 
-import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+export default nextConfig;
