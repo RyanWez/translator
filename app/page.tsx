@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { GoogleGenAI } from '@google/genai';
 import { Copy, Check, RefreshCw, ChevronDown, ArrowUp, Moon, Sun, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -178,7 +179,7 @@ export default function TranslatorApp() {
         <header className={`px-6 py-5 border-b ${isDarkMode ? 'border-[#2C2C2E] bg-[#1C1C1E]' : 'border-gray-100 bg-white'} flex items-center justify-between z-10 shrink-0 transition-colors duration-300`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden transition-colors duration-300`}>
-              <img src="/favicon.ico" alt="Translator Logo" className="w-full h-full object-cover" />
+              <Image src="/favicon.ico" alt="Translator Logo" width={40} height={40} priority className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col">
               <h1 className={`text-[17px] font-semibold leading-tight tracking-tight transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Translator</h1>
