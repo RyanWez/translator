@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
 export const runtime = 'nodejs'; // Use Node.js runtime instead of edge for broader compatibility if needed
+export const maxDuration = 60; // Allow 60 seconds execution time for Image payload parsing via Gemini
 
 export async function POST(req: NextRequest) {
   try {

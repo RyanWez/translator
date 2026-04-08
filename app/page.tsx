@@ -248,19 +248,24 @@ export default function TranslatorApp() {
       let done = false;
       let fullText = '';
       let fullThinking = '';
+      let buffer = '';
 
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
 
         if (value) {
-          const chunkString = decoder.decode(value, { stream: true });
-          const lines = chunkString.split('\n');
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          
+          // The last element is either an empty string (if it ended with \n) 
+          // or an incomplete line. We keep it in the buffer for the next chunk.
+          buffer = lines.pop() || '';
           
           for (const line of lines) {
-            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            if (line.trim().startsWith('data: ') && line.trim() !== 'data: [DONE]') {
               try {
-                const data = JSON.parse(line.slice(6));
+                const data = JSON.parse(line.trim().slice(6));
                 
                 let hasStructuredThought = false;
                 if (data.parts && data.parts.length > 0) {
