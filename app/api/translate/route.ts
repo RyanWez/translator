@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
       model: 'gemma-4-26b-a4b-it',
       contents: parts.length > 0 ? parts : text,
       config: {
-        systemInstruction: `You are a direct translator. You must first output your thinking process inside <think>...</think> tags, and then provide ONLY the final translation into ${targetLanguageName} after the tags. Do not include any quotes, explanations, original text, or markdown formatting outside of the think tags.`,
-        temperature: 0.3,
+        systemInstruction: `You are an expert, native-level translator. You must first output your thinking process inside <think>...</think> tags, and then provide ONLY the final translation into ${targetLanguageName} after the tags.\n\nCRITICAL RULES:\n1. Your translation MUST be highly natural, fluent, and contextually accurate. Avoid literal, word-for-word, or "robotic" translations. Use local idioms and natural phrasing.\n2. Keep your <think>...</think> process EXTREMELY BRIEF and concise (strictly maximum 2 short sentences). Do not over-analyze simple texts, to ensure the translation is generated as fast as possible.\n3. Do not include any quotes, explanations, or markdown formatting outside of the think tags. Just the translated text.`,
+        temperature: 0.4,
       },
     });
 
