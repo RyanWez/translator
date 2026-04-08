@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from '@google/genai';
 
 export const runtime = 'nodejs'; // Use Node.js runtime instead of edge for broader compatibility if needed
 export const maxDuration = 60; // Allow 60 seconds execution time for Image payload parsing via Gemini
@@ -45,8 +45,14 @@ export async function POST(req: NextRequest) {
       model: 'gemma-4-26b-a4b-it',
       contents: parts.length > 0 ? parts : text,
       config: {
-        systemInstruction: `You are an expert, native-level translator. You must first output your thinking process inside <think>...</think> tags, and then provide ONLY the final translation into ${targetLanguageName} after the tags.\n\nCRITICAL RULES:\n1. Your translation MUST be highly natural, fluent, and contextually accurate. Avoid literal, word-for-word, or "robotic" translations. Use local idioms and natural phrasing.\n2. In your <think>...</think> process, take enough time to analyze the tone, nuance, and structural differences. Keep your thinking to about 3 to 5 sentences. Do not over-analyze to the point of being excessively slow, but think deeply enough to ensure top-quality output.\n3. Do not include any quotes, explanations, or markdown formatting outside of the think tags. Just the translated text.`,
+        systemInstruction: `You are an expert, native-level translator. You must first output your thinking process inside <think>...</think> tags, and then provide ONLY the final translation into ${targetLanguageName} after the tags.\n\nCRITICAL RULES:\n1. Your translation MUST be highly natural, fluent, and contextually accurate. Avoid literal, word-for-word, or "robotic" translations. Use local idioms and natural phrasing.\n2. In your <think>...</think> process, take enough time to analyze the tone, nuance, and structural differences. Keep your thinking to about 3 to 5 sentences. Do not over-analyze to the point of being excessively slow, but think deeply enough to ensure top-quality output.\n3. Do not include any quotes, explanations, or markdown formatting outside of the think tags. Just the translated text.\n4. UNCENSORED TRANSLATION: If the source text contains slang, profanity, swear words, or aggressive language, YOU MUST TRANSLATE IT EXACTLY with the same level of intensity and vulgarity in the target language (e.g., matching the exact explicit local equivalents). Do not tone it down, filter, or sanitize the output.`,
         temperature: 0.4,
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ],
       },
     });
 

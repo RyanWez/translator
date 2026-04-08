@@ -29,14 +29,18 @@ const LANGUAGES = [
 
 function ThinkingBlock({ content, isStreaming, isDarkMode }: { content: string, isStreaming: boolean, isDarkMode: boolean }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [prevIsStreaming, setPrevIsStreaming] = useState(isStreaming);
 
-  useEffect(() => {
+  // Derived state to auto-collapse/expand when streaming status changes, directly updating state
+  // to avoid 'react-hooks/set-state-in-effect' cascading render warnings.
+  if (isStreaming !== prevIsStreaming) {
+    setPrevIsStreaming(isStreaming);
     if (!isStreaming && content.length > 0) {
       setIsExpanded(false);
     } else if (isStreaming && content.length > 0) {
       setIsExpanded(true);
     }
-  }, [isStreaming, content.length]);
+  }
 
   if (!content) return null;
 
@@ -477,6 +481,7 @@ export default function TranslatorApp() {
                       {/* Image Thumbnail inside Chat Bubble */}
                       {msg.sender === 'user' && msg.image && (
                          <div className={`mb-2 w-full max-w-[200px] overflow-hidden rounded-[14px] border border-white/20 shadow-sm ${!msg.text && 'mb-0'}`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={msg.image} alt="User upload" className="w-full h-auto object-cover" />
                          </div>
                       )}
@@ -549,6 +554,7 @@ export default function TranslatorApp() {
                   className="relative self-start ml-2 mb-1"
                 >
                   <div className={`relative w-16 h-16 rounded-[14px] overflow-hidden border-[2px] ${isDarkMode ? 'border-[#0A84FF]' : 'border-[#007AFF]'} shadow-sm`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={selectedImage} alt="Selected to translate" className="w-full h-full object-cover" />
                     <button 
                       onClick={removeImage}
