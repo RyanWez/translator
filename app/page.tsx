@@ -4,13 +4,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Copy, Check, RefreshCw, ChevronDown, ArrowUp, Moon, Sun, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { translateText } from './actions';
 
 type Message = {
   id: string;
   text: string;
+  thinking?: string;
   sender: 'user' | 'ai';
   isTranslating?: boolean;
+  isStreaming?: boolean;
   timestamp?: string;
 };
 
@@ -24,6 +25,56 @@ const LANGUAGES = [
   { code: 'es', name: 'Spanish (Español)' },
   { code: 'fr', name: 'French (Français)' },
 ];
+
+function ThinkingBlock({ content, isStreaming, isDarkMode }: { content: string, isStreaming: boolean, isDarkMode: boolean }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  useEffect(() => {
+    if (!isStreaming && content.length > 0) {
+      setIsExpanded(false);
+    } else if (isStreaming && content.length > 0) {
+      setIsExpanded(true);
+    }
+  }, [isStreaming, content.length]);
+
+  if (!content) return null;
+
+  return (
+    <div className={`mb-3 w-full rounded-[16px] border ${isDarkMode ? 'border-[#3A3A3C] bg-[#2C2C2E]' : 'border-gray-300/60 bg-white/50'} overflow-hidden transition-all duration-300`}>
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={`w-full flex items-center justify-between px-3 py-2.5 text-[13px] font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] hover:bg-black/5 dark:hover:bg-white/5`}
+      >
+        <div className="flex items-center gap-2">
+           {isStreaming ? (
+              <RefreshCw size={14} className="animate-spin opacity-70" />
+           ) : (
+              <ChevronDown size={16} className={`transition-transform duration-300 opacity-70 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} />
+           )}
+           <span className="opacity-80">
+              {isStreaming ? 'Thinking...' : 'Thoughts Process'}
+           </span>
+        </div>
+      </button>
+      <AnimatePresence>
+         {isExpanded && (
+            <motion.div
+               initial={{ height: 0, opacity: 0 }}
+               animate={{ height: "auto", opacity: 1 }}
+               exit={{ height: 0, opacity: 0 }}
+               transition={{ duration: 0.2 }}
+               className="border-t border-black/5 dark:border-white/5"
+            >
+               <div className="px-3 pb-3 pt-2 text-[13px] whitespace-pre-wrap leading-relaxed opacity-70 max-h-[150px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full">
+                  {content}
+                  {isStreaming && <span className="inline-block w-1.5 h-3.5 ml-1 bg-current animate-pulse align-text-bottom" />}
+               </div>
+            </motion.div>
+         )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function TranslatorApp() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -73,7 +124,10 @@ export default function TranslatorApp() {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Using a subtle delay to ensure motion animations yield correct heights before scrolling
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   useEffect(() => {
@@ -106,29 +160,118 @@ export default function TranslatorApp() {
     try {
       const selectedLangName = LANGUAGES.find(l => l.code === targetLanguage)?.name || targetLanguage;
       
-      // Add a minimum delay so the typing animation is always visible for a smooth experience
-      const minDelay = new Promise(resolve => setTimeout(resolve, 800));
-      
-      const [response] = await Promise.all([
-        translateText(userText, selectedLangName),
-        minDelay
-      ]);
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: userText,
+          targetLanguageName: selectedLangName,
+        }),
+      });
 
-      const translatedText = response.success ? response.text! : response.error!;
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
 
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === aiMessageId
-            ? { ...msg, text: translatedText, isTranslating: false }
-            : msg
+          msg.id === aiMessageId ? { ...msg, isTranslating: false, isStreaming: true } : msg
         )
       );
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error("No reader available");
+
+      let done = false;
+      let fullText = '';
+      let fullThinking = '';
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+
+        if (value) {
+          const chunkString = decoder.decode(value, { stream: true });
+          const lines = chunkString.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                let hasStructuredThought = false;
+                if (data.parts && data.parts.length > 0) {
+                  for (const part of data.parts) {
+                    if (part.thought) {
+                      fullThinking += part.text;
+                      hasStructuredThought = true;
+                    } else {
+                      fullText += part.text;
+                    }
+                  }
+                } else if (data.text) {
+                  fullText += data.text;
+                }
+
+                let currentText = fullText;
+                let currentThinking = fullThinking;
+
+                 // Advanced manual parsing for <think> in fullText in case the model streams raw text without 'part.thought'
+                if (!hasStructuredThought && currentText) {
+                  const thinkStart = currentText.indexOf('<think>');
+                  const thinkEnd = currentText.indexOf('</think>');
+                  const channelStart = currentText.indexOf('<|channel>thought');
+                  const channelEnd = currentText.indexOf('<channel|>');
+                  
+                  if (thinkStart !== -1) {
+                     if (thinkEnd !== -1) {
+                        currentThinking = currentText.substring(thinkStart + 7, thinkEnd);
+                        currentText = currentText.substring(0, thinkStart) + currentText.substring(thinkEnd + 8);
+                     } else {
+                        currentThinking = currentText.substring(thinkStart + 7);
+                        currentText = currentText.substring(0, thinkStart);
+                     }
+                  } else if (channelStart !== -1) {
+                     if (channelEnd !== -1) {
+                        currentThinking = currentText.substring(channelStart + 17, channelEnd);
+                        currentText = currentText.substring(0, channelStart) + currentText.substring(channelEnd + 10);
+                     } else {
+                        currentThinking = currentText.substring(channelStart + 17);
+                        currentText = currentText.substring(0, channelStart);
+                     }
+                  }
+                }
+
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === aiMessageId
+                      ? { ...msg, text: currentText.trimStart(), thinking: currentThinking }
+                      : msg
+                  )
+                );
+              } catch(e) {
+                // Ignore parse errors for incomplete JSON chunks
+              }
+            }
+          }
+        }
+      }
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === aiMessageId ? { ...msg, isStreaming: false } : msg
+        )
+      );
+
     } catch (error) {
       console.error('Translation error:', error);
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === aiMessageId
-            ? { ...msg, text: 'Sorry, an error occurred during translation.', isTranslating: false }
+            ? { ...msg, text: 'Sorry, an error occurred during translation.', isTranslating: false, isStreaming: false }
             : msg
         )
       );
@@ -231,7 +374,7 @@ export default function TranslatorApp() {
 
         {/* Chat Area */}
         <main 
-          className={`flex-1 overflow-y-auto p-5 space-y-4 scroll-smooth transition-colors duration-300 ${isDarkMode ? 'bg-[#1C1C1E]' : 'bg-white'}`}
+          className={`flex-1 overflow-y-auto w-full p-5 space-y-4 scroll-smooth transition-colors duration-300 ${isDarkMode ? 'bg-[#1C1C1E]' : 'bg-white'}`}
           role="log"
           aria-live="polite"
           aria-atomic="false"
@@ -246,7 +389,7 @@ export default function TranslatorApp() {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                  className="flex flex-col"
+                  className="flex flex-col w-full"
                 >
                   {showTimestamp && msg.timestamp && (
                     <div className="text-center mb-4 mt-2">
@@ -254,7 +397,7 @@ export default function TranslatorApp() {
                     </div>
                   )}
                   
-                  <div className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2 group`}>
+                  <div className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2 group w-full`}>
                     <div
                       className={`max-w-[85%] px-[16px] py-[10px] transition-all duration-300 ${
                         msg.sender === 'user'
@@ -285,13 +428,23 @@ export default function TranslatorApp() {
                           />
                         </div>
                       ) : (
-                        <p className="text-[15px] leading-[1.35] tracking-[-0.01em] whitespace-pre-wrap break-words">
-                          {msg.text}
-                        </p>
+                        <div className="flex flex-col w-full min-w-0">
+                           {msg.thinking && (
+                             <ThinkingBlock content={msg.thinking} isStreaming={!!msg.isStreaming} isDarkMode={isDarkMode} />
+                           )}
+                           {msg.text && (
+                             <p className="text-[15px] leading-[1.35] tracking-[-0.01em] whitespace-pre-wrap break-words">
+                               {msg.text}
+                             </p>
+                           )}
+                           {msg.isStreaming && !msg.text && !msg.thinking && (
+                             <span className="inline-block w-2.5 h-4 bg-current animate-pulse align-text-bottom opacity-50" />
+                           )}
+                        </div>
                       )}
                     </div>
                     
-                    {msg.sender === 'ai' && !msg.isTranslating && (
+                    {msg.sender === 'ai' && !msg.isTranslating && !msg.isStreaming && (
                       <button
                         onClick={() => handleCopy(msg.id, msg.text)}
                         aria-label="Copy translation"
