@@ -5,7 +5,7 @@ export const runtime = 'nodejs'; // Use Node.js runtime instead of edge for broa
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, targetLanguageName } = await req.json();
+    const { text, targetLanguageName, image } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -14,10 +14,35 @@ export async function POST(req: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey });
 
+    // Build the request parts based on inputs
+    const parts: any[] = [];
+
+    // Optional user text
+    if (text) {
+      parts.push({ text });
+    } else if (image) {
+      // If there's an image but no text, provide a default instruction
+      parts.push({ text: "Please translate any text found in this image." });
+    }
+
+    // Attach image if present
+    if (image) {
+      // Parse data URL format: "data:image/png;base64,....."
+      const match = image.match(/^data:(image\/[a-zA-Z+.-]+);base64,(.+)$/);
+      if (match) {
+        parts.push({
+          inlineData: {
+            mimeType: match[1],
+            data: match[2]
+          }
+        });
+      }
+    }
+
     // Initialize the generator
     const responseStream = await ai.models.generateContentStream({
       model: 'gemma-4-26b-a4b-it',
-      contents: text,
+      contents: parts.length > 0 ? parts : text,
       config: {
         systemInstruction: `You are a direct translator. You must first output your thinking process inside <think>...</think> tags, and then provide ONLY the final translation into ${targetLanguageName} after the tags. Do not include any quotes, explanations, original text, or markdown formatting outside of the think tags.`,
         temperature: 0.3,

@@ -2,13 +2,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Copy, Check, RefreshCw, ChevronDown, ArrowUp, Moon, Sun, X } from 'lucide-react';
+import { Copy, Check, RefreshCw, ChevronDown, ArrowUp, Moon, Sun, X, ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type Message = {
   id: string;
   text: string;
   thinking?: string;
+  image?: string;
   sender: 'user' | 'ai';
   isTranslating?: boolean;
   isStreaming?: boolean;
@@ -83,6 +84,11 @@ export default function TranslatorApp() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Vision feature states
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -99,7 +105,7 @@ export default function TranslatorApp() {
     setMessages([
       {
         id: 'welcome-msg',
-        text: 'ဘာသာပြန်ဖို့ ခက်နေတဲ့ စာလေးတွေ ရှိလား? ကျွန်တော့်ဆီသာ ပို့လိုက်ပါ! ဘာစကားပလ္လင်မှ မခံဘဲ လိုချင်တဲ့ ဘာသာပြန်ချက်သက်သက်ကိုပဲ ချက်ချင်း တိုက်ရိုက် ဖော်ပြပေးသွားပါမယ်။',
+        text: 'ဘာသာပြန်ဖို့ ခက်နေတဲ့ စာလေးတွေ ရှိလား? ကျွန်တော့်ဆီသာ ပို့လိုက်ပါ! ဓာတ်ပုံရိုက်ပြီးလည်း စာတွေကို လွယ်ကူစွာ ဘာသာပြန်နိုင်ပါတယ်။',
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -116,7 +122,7 @@ export default function TranslatorApp() {
     setMessages([
       {
         id: Date.now().toString(),
-        text: 'ဘာသာပြန်ဖို့ ခက်နေတဲ့ စာလေးတွေ ရှိလား? ကျွန်တော့်ဆီသာ ပို့လိုက်ပါ! ဘာစကားပလ္လင်မှ မခံဘဲ လိုချင်တဲ့ ဘာသာပြန်ချက်သက်သက်ကိုပဲ ချက်ချင်း တိုက်ရိုက် ဖော်ပြပေးသွားပါမယ်',
+        text: 'ဘာသာပြန်ဖို့ ခက်နေတဲ့ စာလေးတွေ ရှိလား? ကျွန်တော့်ဆီသာ ပို့လိုက်ပါ! ဓာတ်ပုံရိုက်ပြီးလည်း စာတွေကို လွယ်ကူစွာ ဘာသာပြန်နိုင်ပါတယ်။',
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -134,21 +140,74 @@ export default function TranslatorApp() {
     scrollToBottom();
   }, [messages]);
 
+  // Image handling methods
+  const processFile = (file: File) => {
+    // Basic validation
+    if (!file.type.startsWith('image/')) {
+      alert('ကျေးဇူးပြုပြီး ပုံ (Image) အမျိုးအစားကိုသာ ရွေးချယ်ပေးပါ။');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('ဖိုင်အရွယ်အစား 5MB ထက် မကျော်လွန်ပါစေနဲ့။');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setSelectedImage(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+       if (items[i].type.indexOf('image/') === 0) {
+          const file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault(); // Prevent pasting the image name text if any
+            processFile(file);
+            break;
+          }
+       }
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSend = async () => {
-    if (!inputValue.trim() || isTranslating) return;
+    if ((!inputValue.trim() && !selectedImage) || isTranslating) return;
 
     const userText = inputValue.trim();
+    const currentImage = selectedImage;
     const newMessageId = Date.now().toString();
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     // Add user message
     setMessages((prev) => [
       ...prev,
-      { id: newMessageId + '-user', text: userText, sender: 'user', timestamp },
+      { id: newMessageId + '-user', text: userText, image: currentImage || undefined, sender: 'user', timestamp },
     ]);
     
     setInputValue('');
+    removeImage(); // clear pending image
     setIsTranslating(true);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
 
     // Add temporary AI message showing loading state
     const aiMessageId = newMessageId + '-ai';
@@ -168,6 +227,7 @@ export default function TranslatorApp() {
         body: JSON.stringify({
           text: userText,
           targetLanguageName: selectedLangName,
+          image: currentImage // Passing base64 string directly
         }),
       });
 
@@ -219,7 +279,7 @@ export default function TranslatorApp() {
                 let currentText = fullText;
                 let currentThinking = fullThinking;
 
-                 // Advanced manual parsing for <think> in fullText in case the model streams raw text without 'part.thought'
+                 // Advanced manual parsing for <think> in fullText
                 if (!hasStructuredThought && currentText) {
                   const thinkStart = currentText.indexOf('<think>');
                   const thinkEnd = currentText.indexOf('</think>');
@@ -409,6 +469,13 @@ export default function TranslatorApp() {
                               : 'bg-[#E9E9EB] text-black rounded-[20px] rounded-tl-[4px]')
                       }`}
                     >
+                      {/* Image Thumbnail inside Chat Bubble */}
+                      {msg.sender === 'user' && msg.image && (
+                         <div className={`mb-2 w-full max-w-[200px] overflow-hidden rounded-[14px] border border-white/20 shadow-sm ${!msg.text && 'mb-0'}`}>
+                            <img src={msg.image} alt="User upload" className="w-full h-auto object-cover" />
+                         </div>
+                      )}
+
                       {msg.isTranslating ? (
                         <div className="flex items-center gap-1.5 h-6 px-1 py-0.5">
                           <motion.div
@@ -464,66 +531,103 @@ export default function TranslatorApp() {
 
         {/* Input Area */}
         <div className={`p-4 border-t shrink-0 transition-colors duration-300 ${isDarkMode ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
-          <div className="relative flex items-end">
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              maxLength={500}
-              rows={1}
-              placeholder="Message to translate..."
-              aria-label="Message to translate"
-              className={`w-full border rounded-[20px] pl-5 pr-20 py-3 text-[15px] outline-none transition-colors shadow-sm focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:border-transparent resize-none overflow-y-auto min-h-[48px] max-h-[120px] leading-relaxed [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-                isDarkMode 
-                  ? 'bg-[#2C2C2E] border-[#3A3A3C] text-white placeholder:text-gray-500 focus:border-[#48484A]' 
-                  : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300'
-              }`}
-            />
+          <div className="relative flex flex-col gap-2">
+            
+            {/* Image Preview Container */}
             <AnimatePresence>
-              {inputValue.length > 0 && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.15 }}
-                  onClick={() => setInputValue('')}
-                  aria-label="Clear input"
-                  className={`absolute right-12 bottom-2 p-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] ${
-                    isDarkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-[#3A3A3C]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                  }`}
+              {selectedImage && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative self-start ml-2 mb-1"
                 >
-                  <X size={16} strokeWidth={2.5} />
-                </motion.button>
+                  <div className={`relative w-16 h-16 rounded-[14px] overflow-hidden border-[2px] ${isDarkMode ? 'border-[#0A84FF]' : 'border-[#007AFF]'} shadow-sm`}>
+                    <img src={selectedImage} alt="Selected to translate" className="w-full h-full object-cover" />
+                    <button 
+                      onClick={removeImage}
+                      className="absolute top-1 right-1 bg-black/60 hover:bg-black text-white rounded-full p-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-white"
+                      aria-label="Remove image"
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
+                  </div>
+                </motion.div>
               )}
             </AnimatePresence>
-            <button
-              onClick={handleSend}
-              disabled={!inputValue.trim() || isTranslating}
-              aria-label="Send message"
-              className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#007AFF] ${
-                inputValue.trim() && !isTranslating
-                  ? (isDarkMode ? 'bg-[#0A84FF] text-white shadow-md hover:bg-blue-500 scale-100' : 'bg-[#007AFF] text-white shadow-md hover:bg-blue-600 scale-100')
-                  : (isDarkMode ? 'bg-[#2C2C2E] text-gray-500 scale-95' : 'bg-gray-100 text-gray-400 scale-95')
-              }`}
-            >
-              <ArrowUp size={18} strokeWidth={2.5} />
-            </button>
-          </div>
-          <div className="flex justify-between items-center mt-3 mb-1 px-2">
-            <span className={`text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              Direct Translation Engine
-            </span>
-            <span 
-              className={`text-[10px] font-medium transition-colors duration-300 ${
-                inputValue.length >= 500 
-                  ? 'text-red-500' 
-                  : isDarkMode ? 'text-gray-500' : 'text-gray-400'
-              }`}
-              aria-live="polite"
-            >
-              {inputValue.length} / 500
-            </span>
+
+            {/* Input Box Row */}
+            <div className="relative flex items-end">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                accept="image/*" 
+                onChange={handleImageUpload} 
+                className="hidden" 
+                aria-hidden="true" 
+              />
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isTranslating}
+                className={`absolute left-2.5 bottom-1.5 p-2 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] z-10 ${
+                  isDarkMode 
+                    ? 'text-gray-400 hover:text-gray-200 hover:bg-[#3A3A3C]' 
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                } ${isTranslating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title="Upload Image"
+                aria-label="Upload Image"
+              >
+                <ImageIcon size={20} strokeWidth={2} />
+              </button>
+
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                maxLength={500}
+                rows={1}
+                placeholder="Message or paste image..."
+                aria-label="Message to translate"
+                className={`w-full border rounded-[20px] pl-[2.8rem] pr-12 py-3 text-[15px] outline-none transition-colors shadow-sm focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:border-transparent resize-none overflow-y-auto min-h-[48px] max-h-[120px] leading-relaxed [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+                  isDarkMode 
+                    ? 'bg-[#2C2C2E] border-[#3A3A3C] text-white placeholder:text-gray-500 focus:border-[#48484A]' 
+                    : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300'
+                }`}
+              />
+              
+              <button
+                onClick={handleSend}
+                disabled={(!inputValue.trim() && !selectedImage) || isTranslating}
+                aria-label="Send message"
+                className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#007AFF] z-10 ${
+                  (inputValue.trim() || selectedImage) && !isTranslating
+                    ? (isDarkMode ? 'bg-[#0A84FF] text-white shadow-md hover:bg-blue-500 scale-100' : 'bg-[#007AFF] text-white shadow-md hover:bg-blue-600 scale-100')
+                    : (isDarkMode ? 'bg-[#2C2C2E] text-gray-500 scale-95' : 'bg-gray-100 text-gray-400 scale-95')
+                }`}
+              >
+                <ArrowUp size={18} strokeWidth={2.5} />
+              </button>
+            </div>
+            
+            <div className="flex justify-between items-center mt-2 mb-1 px-2">
+              <span className={`text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                Direct Translation Engine
+              </span>
+              <span 
+                className={`text-[10px] font-medium transition-colors duration-300 ${
+                  inputValue.length >= 500 
+                    ? 'text-red-500' 
+                    : isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`}
+                aria-live="polite"
+              >
+                {inputValue.length} / 500
+              </span>
+            </div>
           </div>
         </div>
 
