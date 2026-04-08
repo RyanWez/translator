@@ -36,9 +36,12 @@ export default function TranslatorApp() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Check system preference on mount
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    // Check localStorage for saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
       setIsDarkMode(true);
+    } else {
+      setIsDarkMode(false);
     }
     
     // Set initial message on mount to avoid hydration mismatch with dates
@@ -180,7 +183,11 @@ export default function TranslatorApp() {
           <div className="flex items-center gap-2">
             <div className="relative group">
               <button 
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={() => {
+                  const newDarkMode = !isDarkMode;
+                  setIsDarkMode(newDarkMode);
+                  localStorage.setItem('theme', newDarkMode ? 'dark' : 'light');
+                }}
                 aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                 className={`p-2 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] ${isDarkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-[#2C2C2E]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
               >
