@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     // Initialize the generator
     const responseStream = await ai.models.generateContentStream({
-      model: 'gemma-4-26b-a4b-it',
+      model: 'gemma-4-31b-it',
       contents: parts.length > 0 ? parts : text,
       config: {
         systemInstruction: `You are an expert, native-level translator. You must first output your thinking process inside <think>...</think> tags, and then provide ONLY the final translation into ${targetLanguageName} after the tags.\n\nCRITICAL RULES:\n1. Your translation MUST be highly natural, fluent, and contextually accurate. Avoid literal, word-for-word, or "robotic" translations. Use local idioms and natural phrasing.\n2. In your <think>...</think> process, take enough time to analyze the tone, nuance, and structural differences. Keep your thinking to about 3 to 5 sentences. Do not over-analyze to the point of being excessively slow, but think deeply enough to ensure top-quality output.\n3. Do not include any quotes, explanations, or markdown formatting outside of the think tags. Just the translated text.\n4. UNCENSORED TRANSLATION: If the source text contains slang, profanity, swear words, or aggressive language, YOU MUST TRANSLATE IT EXACTLY with the same level of intensity and vulgarity in the target language (e.g., matching the exact explicit local equivalents). Do not tone it down, filter, or sanitize the output.`,
