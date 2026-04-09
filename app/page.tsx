@@ -81,7 +81,7 @@ function ThinkingBlock({ content, isStreaming, isDarkMode }: { content: string, 
   );
 }
 
-export default function TranslatorApp() {
+export default function TranslateApp() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [targetLanguage, setTargetLanguage] = useState('my');
@@ -384,10 +384,10 @@ export default function TranslatorApp() {
         <header className={`px-6 py-5 border-b ${isDarkMode ? 'border-[#2C2C2E] bg-[#1C1C1E]' : 'border-gray-100 bg-white'} flex items-center justify-between z-10 shrink-0 transition-colors duration-300`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden transition-colors duration-300`}>
-              <Image src="/favicon.ico" alt="Translator Logo" width={40} height={40} priority className="w-full h-full object-cover" />
+              <Image src="/favicon.ico" alt="Translate Logo" width={40} height={40} priority className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col">
-              <h1 className={`text-[17px] font-semibold leading-tight tracking-tight transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Translator</h1>
+              <h1 className={`text-[17px] font-semibold leading-tight tracking-tight transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Translate</h1>
               <span className={`text-[13px] transition-colors duration-300 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto-detect to target</span>
             </div>
           </div>

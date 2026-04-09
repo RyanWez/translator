@@ -1,8 +1,8 @@
 <div align="center">
 
-<img width="80" height="80" src="public/favicon.ico" alt="Translator Logo" />
+<img width="80" height="80" src="public/favicon.ico" alt="Translate Logo" />
 
-# Translator
+# Translate
 
 **AI-Powered Multilingual Translation — Instant, Direct, Beautiful.**
 
@@ -14,7 +14,7 @@
 
 <br />
 
-[**Live Demo →**](https://translator.ryanwez.com)
+[**Live Demo →**](https://translate.ryanwez.com)
 
 
 </div>
@@ -77,7 +77,7 @@
 </tr>
 <tr>
 <td><strong>Domain</strong></td>
-<td><a href="https://translator.ryanwez.com">translator.ryanwez.com</a></td>
+<td><a href="https://translate.ryanwez.com">translate.ryanwez.com</a></td>
 </tr>
 </table>
 
@@ -93,8 +93,8 @@
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/RyanWez/translator.git
-cd translator
+git clone https://github.com/RyanWez/translate.git
+cd translate
 npm install
 ```
 
@@ -131,14 +131,14 @@ npm run deploy
 ```
 
 > **Note:** Set `GEMINI_API_KEY` as a secret in your Cloudflare dashboard:
-> **Workers & Pages → translator → Settings → Environment variables**
+> **Workers & Pages → translate → Settings → Environment variables**
 
 ---
 
 ## 📁 Project Structure
 
 ```
-translator/
+translate/
 ├── app/
 │   ├── page.tsx          # Main chat UI component
 │   ├── actions.ts        # Server action (Gemini API call)
