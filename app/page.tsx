@@ -46,36 +46,36 @@ function ThinkingBlock({ content, isStreaming, isDarkMode }: { content: string, 
 
   return (
     <div className={`mb-3 w-full rounded-[16px] border ${isDarkMode ? 'border-[#3A3A3C] bg-[#2C2C2E]' : 'border-gray-300/60 bg-white/50'} overflow-hidden transition-all duration-300`}>
-      <button 
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={`w-full flex items-center justify-between px-3 py-2.5 text-[13px] font-medium cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] hover:bg-black/5 dark:hover:bg-white/5`}
       >
         <div className="flex items-center gap-2">
-           {isStreaming ? (
-              <RefreshCw size={14} className="animate-spin opacity-70" />
-           ) : (
-              <ChevronDown size={16} className={`transition-transform duration-300 opacity-70 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} />
-           )}
-           <span className="opacity-80">
-              {isStreaming ? 'Thinking...' : 'Thoughts Process'}
-           </span>
+          {isStreaming ? (
+            <RefreshCw size={14} className="animate-spin opacity-70" />
+          ) : (
+            <ChevronDown size={16} className={`transition-transform duration-300 opacity-70 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} />
+          )}
+          <span className="opacity-80">
+            {isStreaming ? 'Thinking...' : 'Thoughts Process'}
+          </span>
         </div>
       </button>
       <AnimatePresence>
-         {isExpanded && (
-            <motion.div
-               initial={{ height: 0, opacity: 0 }}
-               animate={{ height: "auto", opacity: 1 }}
-               exit={{ height: 0, opacity: 0 }}
-               transition={{ duration: 0.2 }}
-               className="border-t border-black/5 dark:border-white/5"
-            >
-               <div className="px-3 pb-3 pt-2 text-[13px] whitespace-pre-wrap leading-relaxed opacity-70 max-h-[150px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full">
-                  {content}
-                  {isStreaming && <span className="inline-block w-1.5 h-3.5 ml-1 bg-current animate-pulse align-text-bottom" />}
-               </div>
-            </motion.div>
-         )}
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="border-t border-black/5 dark:border-white/5"
+          >
+            <div className="px-3 pb-3 pt-2 text-[13px] whitespace-pre-wrap leading-relaxed opacity-70 max-h-[150px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full">
+              {content}
+              {isStreaming && <span className="inline-block w-1.5 h-3.5 ml-1 bg-current animate-pulse align-text-bottom" />}
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
@@ -88,7 +88,7 @@ export default function TranslatorApp() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
+
   // Vision feature states
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,12 +104,12 @@ export default function TranslatorApp() {
     } else {
       setIsDarkMode(false);
     }
-    
+
     // Set initial message on mount to avoid hydration mismatch with dates
     setMessages([
       {
         id: 'welcome-msg',
-        text: 'ဘာသာပြန်ဖို့ ခက်နေတဲ့ စာလေးတွေ ရှိလား? ကျွန်တော့်ဆီသာ ပို့လိုက်ပါ! ဓာတ်ပုံရိုက်ပြီးလည်း စာတွေကို လွယ်ကူစွာ ဘာသာပြန်နိုင်ပါတယ်။',
+        text: 'အနီးစပ်ဆုံးနဲ့ အမှန်ကန်ဆုံး ဖြစ်အောင် ဘာသာ ပြန်ပေးပါသည်။',
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -126,7 +126,7 @@ export default function TranslatorApp() {
     setMessages([
       {
         id: Date.now().toString(),
-        text: 'ဘာသာပြန်ဖို့ ခက်နေတဲ့ စာလေးတွေ ရှိလား? ကျွန်တော့်ဆီသာ ပို့လိုက်ပါ! ဓာတ်ပုံရိုက်ပြီးလည်း စာတွေကို လွယ်ကူစွာ ဘာသာပြန်နိုင်ပါတယ်။',
+        text: 'အနီးစပ်ဆုံးနဲ့ အမှန်ကန်ဆုံး ဖြစ်အောင် ဘာသာ ပြန်ပေးပါသည်။',
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -173,14 +173,14 @@ export default function TranslatorApp() {
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
-       if (items[i].type.indexOf('image/') === 0) {
-          const file = items[i].getAsFile();
-          if (file) {
-            e.preventDefault(); // Prevent pasting the image name text if any
-            processFile(file);
-            break;
-          }
-       }
+      if (items[i].type.indexOf('image/') === 0) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault(); // Prevent pasting the image name text if any
+          processFile(file);
+          break;
+        }
+      }
     }
   };
 
@@ -198,13 +198,13 @@ export default function TranslatorApp() {
     const currentImage = selectedImage;
     const newMessageId = Date.now().toString();
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     // Add user message
     setMessages((prev) => [
       ...prev,
       { id: newMessageId + '-user', text: userText, image: currentImage || undefined, sender: 'user', timestamp },
     ]);
-    
+
     setInputValue('');
     removeImage(); // clear pending image
     setIsTranslating(true);
@@ -222,7 +222,7 @@ export default function TranslatorApp() {
 
     try {
       const selectedLangName = LANGUAGES.find(l => l.code === targetLanguage)?.name || targetLanguage;
-      
+
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: {
@@ -261,16 +261,16 @@ export default function TranslatorApp() {
         if (value) {
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split('\n');
-          
+
           // The last element is either an empty string (if it ended with \n) 
           // or an incomplete line. We keep it in the buffer for the next chunk.
           buffer = lines.pop() || '';
-          
+
           for (const line of lines) {
             if (line.trim().startsWith('data: ') && line.trim() !== 'data: [DONE]') {
               try {
                 const data = JSON.parse(line.trim().slice(6));
-                
+
                 let hasStructuredThought = false;
                 if (data.parts && data.parts.length > 0) {
                   for (const part of data.parts) {
@@ -288,29 +288,29 @@ export default function TranslatorApp() {
                 let currentText = fullText;
                 let currentThinking = fullThinking;
 
-                 // Advanced manual parsing for <think> in fullText
+                // Advanced manual parsing for <think> in fullText
                 if (!hasStructuredThought && currentText) {
                   const thinkStart = currentText.indexOf('<think>');
                   const thinkEnd = currentText.indexOf('</think>');
                   const channelStart = currentText.indexOf('<|channel>thought');
                   const channelEnd = currentText.indexOf('<channel|>');
-                  
+
                   if (thinkStart !== -1) {
-                     if (thinkEnd !== -1) {
-                        currentThinking = currentText.substring(thinkStart + 7, thinkEnd);
-                        currentText = currentText.substring(0, thinkStart) + currentText.substring(thinkEnd + 8);
-                     } else {
-                        currentThinking = currentText.substring(thinkStart + 7);
-                        currentText = currentText.substring(0, thinkStart);
-                     }
+                    if (thinkEnd !== -1) {
+                      currentThinking = currentText.substring(thinkStart + 7, thinkEnd);
+                      currentText = currentText.substring(0, thinkStart) + currentText.substring(thinkEnd + 8);
+                    } else {
+                      currentThinking = currentText.substring(thinkStart + 7);
+                      currentText = currentText.substring(0, thinkStart);
+                    }
                   } else if (channelStart !== -1) {
-                     if (channelEnd !== -1) {
-                        currentThinking = currentText.substring(channelStart + 17, channelEnd);
-                        currentText = currentText.substring(0, channelStart) + currentText.substring(channelEnd + 10);
-                     } else {
-                        currentThinking = currentText.substring(channelStart + 17);
-                        currentText = currentText.substring(0, channelStart);
-                     }
+                    if (channelEnd !== -1) {
+                      currentThinking = currentText.substring(channelStart + 17, channelEnd);
+                      currentText = currentText.substring(0, channelStart) + currentText.substring(channelEnd + 10);
+                    } else {
+                      currentThinking = currentText.substring(channelStart + 17);
+                      currentText = currentText.substring(0, channelStart);
+                    }
                   }
                 }
 
@@ -321,7 +321,7 @@ export default function TranslatorApp() {
                       : msg
                   )
                 );
-              } catch(e) {
+              } catch (e) {
                 // Ignore parse errors for incomplete JSON chunks
               }
             }
@@ -358,7 +358,7 @@ export default function TranslatorApp() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
-    
+
     // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -376,10 +376,10 @@ export default function TranslatorApp() {
 
   return (
     <div className={`flex flex-col items-center justify-center min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-black' : 'bg-[#e5e7eb]'} font-sans selection:bg-blue-200 p-4 sm:p-8`}>
-      
+
       {/* Mobile Container */}
       <div className={`w-full max-w-[420px] h-[85vh] max-h-[850px] min-h-[600px] ${isDarkMode ? 'bg-[#1C1C1E] border-[#1C1C1E] ring-[#2C2C2E]' : 'bg-white border-white ring-gray-200'} rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden relative border-[6px] ring-1 transition-colors duration-300`}>
-        
+
         {/* Header */}
         <header className={`px-6 py-5 border-b ${isDarkMode ? 'border-[#2C2C2E] bg-[#1C1C1E]' : 'border-gray-100 bg-white'} flex items-center justify-between z-10 shrink-0 transition-colors duration-300`}>
           <div className="flex items-center gap-3">
@@ -391,10 +391,10 @@ export default function TranslatorApp() {
               <span className={`text-[13px] transition-colors duration-300 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto-detect to target</span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <div className="relative group">
-              <button 
+              <button
                 onClick={() => {
                   const newDarkMode = !isDarkMode;
                   setIsDarkMode(newDarkMode);
@@ -411,7 +411,7 @@ export default function TranslatorApp() {
             </div>
 
             <div className="relative group">
-              <button 
+              <button
                 onClick={clearChat}
                 aria-label="Clear chat"
                 className={`p-2 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] ${isDarkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-[#2C2C2E]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
@@ -442,7 +442,7 @@ export default function TranslatorApp() {
         </header>
 
         {/* Chat Area */}
-        <main 
+        <main
           className={`flex-1 overflow-y-auto w-full p-5 space-y-4 scroll-smooth transition-colors duration-300 ${isDarkMode ? 'bg-[#1C1C1E]' : 'bg-white'}`}
           role="log"
           aria-live="polite"
@@ -451,7 +451,7 @@ export default function TranslatorApp() {
           <AnimatePresence initial={false}>
             {messages.map((msg, index) => {
               const showTimestamp = index === 0 || messages[index - 1]?.timestamp !== msg.timestamp;
-              
+
               return (
                 <motion.div
                   key={msg.id}
@@ -465,25 +465,24 @@ export default function TranslatorApp() {
                       <span className={`text-[11px] font-medium ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{msg.timestamp}</span>
                     </div>
                   )}
-                  
+
                   <div className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2 group w-full`}>
                     <div
-                      className={`max-w-[85%] px-[16px] py-[10px] transition-all duration-300 ${
-                        msg.sender === 'user'
-                          ? (isDarkMode 
-                              ? 'bg-gradient-to-br from-[#3A9FFF] to-[#0A84FF] text-white rounded-[20px] rounded-br-[4px]' 
-                              : 'bg-gradient-to-br from-[#2E8CFF] to-[#007AFF] text-white rounded-[20px] rounded-br-[4px]')
-                          : (isDarkMode 
-                              ? 'bg-[#262628] text-white rounded-[20px] rounded-tl-[4px]' 
-                              : 'bg-[#E9E9EB] text-black rounded-[20px] rounded-tl-[4px]')
-                      }`}
+                      className={`max-w-[85%] px-[16px] py-[10px] transition-all duration-300 ${msg.sender === 'user'
+                        ? (isDarkMode
+                          ? 'bg-gradient-to-br from-[#3A9FFF] to-[#0A84FF] text-white rounded-[20px] rounded-br-[4px]'
+                          : 'bg-gradient-to-br from-[#2E8CFF] to-[#007AFF] text-white rounded-[20px] rounded-br-[4px]')
+                        : (isDarkMode
+                          ? 'bg-[#262628] text-white rounded-[20px] rounded-tl-[4px]'
+                          : 'bg-[#E9E9EB] text-black rounded-[20px] rounded-tl-[4px]')
+                        }`}
                     >
                       {/* Image Thumbnail inside Chat Bubble */}
                       {msg.sender === 'user' && msg.image && (
-                         <div className={`mb-2 w-full max-w-[200px] overflow-hidden rounded-[14px] border border-white/20 shadow-sm ${!msg.text && 'mb-0'}`}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={msg.image} alt="User upload" className="w-full h-auto object-cover" />
-                         </div>
+                        <div className={`mb-2 w-full max-w-[200px] overflow-hidden rounded-[14px] border border-white/20 shadow-sm ${!msg.text && 'mb-0'}`}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={msg.image} alt="User upload" className="w-full h-auto object-cover" />
+                        </div>
                       )}
 
                       {msg.isTranslating ? (
@@ -506,21 +505,21 @@ export default function TranslatorApp() {
                         </div>
                       ) : (
                         <div className="flex flex-col w-full min-w-0">
-                           {msg.thinking && (
-                             <ThinkingBlock content={msg.thinking} isStreaming={!!msg.isStreaming} isDarkMode={isDarkMode} />
-                           )}
-                           {msg.text && (
-                             <p className="text-[15px] leading-[1.35] tracking-[-0.01em] whitespace-pre-wrap break-words">
-                               {msg.text}
-                             </p>
-                           )}
-                           {msg.isStreaming && !msg.text && !msg.thinking && (
-                             <span className="inline-block w-2.5 h-4 bg-current animate-pulse align-text-bottom opacity-50" />
-                           )}
+                          {msg.thinking && (
+                            <ThinkingBlock content={msg.thinking} isStreaming={!!msg.isStreaming} isDarkMode={isDarkMode} />
+                          )}
+                          {msg.text && (
+                            <p className="text-[15px] leading-[1.35] tracking-[-0.01em] whitespace-pre-wrap break-words">
+                              {msg.text}
+                            </p>
+                          )}
+                          {msg.isStreaming && !msg.text && !msg.thinking && (
+                            <span className="inline-block w-2.5 h-4 bg-current animate-pulse align-text-bottom opacity-50" />
+                          )}
                         </div>
                       )}
                     </div>
-                    
+
                     {msg.sender === 'ai' && !msg.isTranslating && !msg.isStreaming && (
                       <button
                         onClick={() => handleCopy(msg.id, msg.text)}
@@ -542,11 +541,11 @@ export default function TranslatorApp() {
         {/* Input Area */}
         <div className={`p-4 border-t shrink-0 transition-colors duration-300 ${isDarkMode ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
           <div className="relative flex flex-col gap-2">
-            
+
             {/* Image Preview Container */}
             <AnimatePresence>
               {selectedImage && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.9, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -556,7 +555,7 @@ export default function TranslatorApp() {
                   <div className={`relative w-16 h-16 rounded-[14px] overflow-hidden border-[2px] ${isDarkMode ? 'border-[#0A84FF]' : 'border-[#007AFF]'} shadow-sm`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={selectedImage} alt="Selected to translate" className="w-full h-full object-cover" />
-                    <button 
+                    <button
                       onClick={removeImage}
                       className="absolute top-1 right-1 bg-black/60 hover:bg-black text-white rounded-full p-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-white"
                       aria-label="Remove image"
@@ -570,23 +569,22 @@ export default function TranslatorApp() {
 
             {/* Input Box Row */}
             <div className="relative flex items-end">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-                className="hidden" 
-                aria-hidden="true" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                aria-hidden="true"
               />
-              
+
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isTranslating}
-                className={`absolute left-2.5 bottom-1.5 p-2 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] z-10 ${
-                  isDarkMode 
-                    ? 'text-gray-400 hover:text-gray-200 hover:bg-[#3A3A3C]' 
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                } ${isTranslating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`absolute left-2.5 bottom-1.5 p-2 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] z-10 ${isDarkMode
+                  ? 'text-gray-400 hover:text-gray-200 hover:bg-[#3A3A3C]'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  } ${isTranslating ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Upload Image"
                 aria-label="Upload Image"
               >
@@ -603,37 +601,34 @@ export default function TranslatorApp() {
                 rows={1}
                 placeholder="Message or paste image..."
                 aria-label="Message to translate"
-                className={`w-full border rounded-[20px] pl-[2.8rem] pr-12 py-3 text-[15px] outline-none transition-colors shadow-sm focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:border-transparent resize-none overflow-y-auto min-h-[48px] max-h-[120px] leading-relaxed [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
-                  isDarkMode 
-                    ? 'bg-[#2C2C2E] border-[#3A3A3C] text-white placeholder:text-gray-500 focus:border-[#48484A]' 
-                    : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300'
-                }`}
+                className={`w-full border rounded-[20px] pl-[2.8rem] pr-12 py-3 text-[15px] outline-none transition-colors shadow-sm focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:border-transparent resize-none overflow-y-auto min-h-[48px] max-h-[120px] leading-relaxed [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${isDarkMode
+                  ? 'bg-[#2C2C2E] border-[#3A3A3C] text-white placeholder:text-gray-500 focus:border-[#48484A]'
+                  : 'bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-300'
+                  }`}
               />
-              
+
               <button
                 onClick={handleSend}
                 disabled={(!inputValue.trim() && !selectedImage) || isTranslating}
                 aria-label="Send message"
-                className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#007AFF] z-10 ${
-                  (inputValue.trim() || selectedImage) && !isTranslating
-                    ? (isDarkMode ? 'bg-[#0A84FF] text-white shadow-md hover:bg-blue-500 scale-100' : 'bg-[#007AFF] text-white shadow-md hover:bg-blue-600 scale-100')
-                    : (isDarkMode ? 'bg-[#2C2C2E] text-gray-500 scale-95' : 'bg-gray-100 text-gray-400 scale-95')
-                }`}
+                className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#007AFF] z-10 ${(inputValue.trim() || selectedImage) && !isTranslating
+                  ? (isDarkMode ? 'bg-[#0A84FF] text-white shadow-md hover:bg-blue-500 scale-100' : 'bg-[#007AFF] text-white shadow-md hover:bg-blue-600 scale-100')
+                  : (isDarkMode ? 'bg-[#2C2C2E] text-gray-500 scale-95' : 'bg-gray-100 text-gray-400 scale-95')
+                  }`}
               >
                 <ArrowUp size={18} strokeWidth={2.5} />
               </button>
             </div>
-            
+
             <div className="flex justify-between items-center mt-2 mb-1 px-2">
               <span className={`text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                 Direct Translation Engine
               </span>
-              <span 
-                className={`text-[10px] font-medium transition-colors duration-300 ${
-                  inputValue.length >= 500 
-                    ? 'text-red-500' 
-                    : isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                }`}
+              <span
+                className={`text-[10px] font-medium transition-colors duration-300 ${inputValue.length >= 500
+                  ? 'text-red-500'
+                  : isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                  }`}
                 aria-live="polite"
               >
                 {inputValue.length} / 500
