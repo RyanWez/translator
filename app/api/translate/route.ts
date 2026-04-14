@@ -4,9 +4,69 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from '@google/genai';
 export const runtime = 'nodejs'; // Use Node.js runtime instead of edge for broader compatibility if needed
 export const maxDuration = 60; // Allow 60 seconds execution time for Image payload parsing via Gemini
 
+// Helper function to detect if the input text is already predominantly in the target language
+// This uses script-based Unicode detection to quickly bypass AI translation for non-Latin languages.
+function isTextInTargetLanguage(text: string, targetLanguageName: string): boolean {
+  if (!text || text.trim() === '') return false;
+  
+  // Remove spaces, numbers, and common punctuation for better ratio calculation
+  const cleanText = text.replace(/[\s\d.,!?"'()\[\]{}<>\-_+=\/\\|:;~`]+/g, '');
+  if (cleanText.length === 0) return false;
+
+  const patterns: Record<string, RegExp> = {
+    'Burmese (မြန်မာ)': /^[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]+$/,
+    'Japanese (日本語)': /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+$/,
+    'Korean (한국어)': /^[\uAC00-\uD7A3\u3130-\u318F]+$/,
+    'Chinese (中文)': /^[\u4E00-\u9FFF]+$/,
+    'Thai (ไทย)': /^[\u0E00-\u0E7F]+$/,
+  };
+
+  const targetPattern = patterns[targetLanguageName];
+  if (!targetPattern) return false; // Fallback to AI for Latin-based or overlapping languages
+
+  let matchCount = 0;
+  for (const char of cleanText) {
+    if (targetPattern.test(char)) {
+      matchCount++;
+    }
+  }
+
+  // If 85% or more of the valid characters belong to the target language block, bypass AI.
+  return (matchCount / cleanText.length) >= 0.85;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { text, targetLanguageName, image } = await req.json();
+    const encoder = new TextEncoder();
+
+    // --- Fast Bypass Check ---
+    // If the text is purely in the target language (e.g. Burmese to Burmese), bypass Gemini to save time/cost.
+    if (text && !image && isTextInTargetLanguage(text, targetLanguageName)) {
+      const stream = new ReadableStream({
+        start(controller) {
+          const safeData = {
+            text: text, 
+            parts: [
+              { text: `အခုပို့လိုက်တဲ့စာသားက ရွေးချယ်ထားတဲ့ ဘာသာစကား (${targetLanguageName}) နဲ့ တူညီနေပါတယ်။ AI ဘာသာပြန်စရာမလိုဘဲ တိုက်ရိုက် ပြန်ပေးလိုက်ပါတယ်။\n\nThe input text is already in the selected target language. Bypassing translation.`, thought: true },
+              { text: text, thought: false }
+            ]
+          };
+          const sseFormatted = `data: ${JSON.stringify(safeData)}\n\n`;
+          controller.enqueue(encoder.encode(sseFormatted));
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        }
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -56,8 +116,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const encoder = new TextEncoder();
-    
     // Create a ReadableStream to stream Server-Sent Events to the client
     const stream = new ReadableStream({
       async start(controller) {
