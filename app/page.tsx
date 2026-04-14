@@ -386,9 +386,8 @@ export default function TranslateApp() {
             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden transition-colors duration-300`}>
               <Image src="/favicon.ico" alt="Translate Logo" width={40} height={40} priority className="w-full h-full object-cover" />
             </div>
-            <div className="flex flex-col">
-              <h1 className={`text-[17px] font-semibold leading-tight tracking-tight transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Translate</h1>
-              <span className={`text-[13px] transition-colors duration-300 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Auto-detect to target</span>
+            <div className="flex flex-col justify-center">
+              <h1 className={`text-[18px] font-semibold leading-tight tracking-tight transition-colors duration-300 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Translate</h1>
             </div>
           </div>
 
@@ -423,21 +422,6 @@ export default function TranslateApp() {
               </div>
             </div>
 
-            <div className="relative">
-              <select
-                value={targetLanguage}
-                onChange={(e) => setTargetLanguage(e.target.value)}
-                aria-label="Select target language"
-                className={`appearance-none transition-colors text-[13px] font-medium rounded-full pl-3 pr-8 py-1.5 outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-[#007AFF] ${isDarkMode ? 'bg-[#2C2C2E] hover:bg-[#3A3A3C] text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} className={`absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-            </div>
           </div>
         </header>
 
@@ -448,6 +432,28 @@ export default function TranslateApp() {
           aria-live="polite"
           aria-atomic="false"
         >
+          {/* Language Selector */}
+          <div className="flex flex-col items-center justify-center mt-1 mb-5 w-full">
+            <span className={`text-[12px] font-medium mb-2.5 transition-colors duration-300 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              Select Language
+            </span>
+            <div className="relative">
+              <select
+                value={targetLanguage}
+                onChange={(e) => setTargetLanguage(e.target.value)}
+                aria-label="Select target language"
+                className={`appearance-none transition-colors text-[13px] font-medium rounded-full pl-4 pr-10 py-2 outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-[#007AFF] shadow-sm border ${isDarkMode ? 'bg-[#2C2C2E] hover:bg-[#3A3A3C] text-gray-200 border-[#3A3A3C]' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200'}`}
+              >
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+            </div>
+          </div>
+
           <AnimatePresence initial={false}>
             {messages.map((msg, index) => {
               const showTimestamp = index === 0 || messages[index - 1]?.timestamp !== msg.timestamp;
